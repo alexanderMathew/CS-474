@@ -62,19 +62,22 @@ void subSampleImage(ImageType originalImage, ImageType& newImage, int factor){
 
 void quantizeImage(int qLevel, int n, int m, ImageType originalImage, ImageType newImage){
     int val;
-    //originalImage.getImageInfo(n, m, qLevel); //Update the image so the quantum level matches Q ********
     qLevel = 256 / qLevel;
+	//newImage.setImageInfo(m, n, qLevel);// new
 
+	cout << "M: " << m << "N: "<< n << "q lvl: " << qLevel << endl;
     for(int i = 0; i < n; i++){
         for(int j = 0; j < m; j++){
             originalImage.getPixelVal(i, j, val);
 			//originalImage.printPixelVal(i, j);
-            val /= qLevel;
+			val /= qLevel;
             newImage.setPixelVal(i, j, val);
+			//newImage.setImageInfo(m, n, qLevel);// new
+
 			//newImage.printPixelVal(i, j);
         }
     }
-
+    
 }
 
 /*void rescale(int n, int m, int q, ImageType OriginalImage){
@@ -139,7 +142,6 @@ void Q1() {
 	writeImage(writePath, ssImage);
 
 	cout << "File written to: " << writePath <<endl;
-
 }
 
 // QUESTION 2: IMAGE QUANTIZATION
@@ -161,7 +163,6 @@ void Q2(){
 
 	readImage(readPath, ImageToQuantize);
 
-
     cout << "Enter quantization level: ";
     cin >> q_level;
 
@@ -175,22 +176,23 @@ void Q2(){
 
 	//PROBLEM WITHH FUNCTION
     quantizeImage(q_level, x, y, ImageToQuantize, resizedImage);
-	for(int i = 0; i < y; i++){
+	/*for(int i = 0; i < y; i++){
 		for(int j = 0; j < x; j++){
 			resizedImage.printPixelVal(i, j);
 		}
-	}
+	}*/
+
     writeImage(writePath, resizedImage);
 
 	cout << "File written to: " << writePath <<endl;
 
 }
 
+
 // QUESTION 3: HISTOGRAM EQUALIZATION
-//////////////////////////////////////////////////////////////////////////////////////////CHANGE COMMENTS!!!!!!!!!!!!
 void Q3()
 {
-	int m, n, q; //n, m, and q for the input image
+	int m, n, q; 
 	bool type;
 	char* readPath = "./Images/lenna.pgm";
 	char *writePath = "./Images/lenna_hist_eq.pgm"; 
@@ -201,11 +203,11 @@ void Q3()
 	originalImage.getImageInfo(n, m, q);
     readImage(readPath, originalImage);
 
-    //Declaration for storing the two histograms
+    // declare two histograms
     vector<int> originalHist(256, 0);
     vector<int> equalizedHist(256, 0);
 
-    //Calculate Histogram
+    // calculate histogram
     for(int i = 0; i < m; i++){
         for(int j = 0; j < n; j++){
             int temp;
@@ -214,38 +216,109 @@ void Q3()
         }
     }
 
-    //Calculate total amount of pixels
+    // get total # of pixels
     int total = m * n;
     int frequency = 0;
 
-    // calculating cumulative frequency and new gray levels
     for (int i = 0; i < 256; i++) {
-        // calculating cumulative frequency
+        // calculate cumulative frequency 
         frequency = frequency + originalHist[i];
   
-		// calculating equalized histogram's gray level
+		// calculate equalized gray level
         equalizedHist[i] = round((((float)frequency) * 255) / total);
     }
 
     ImageType equalizedImage(n, m, q);
 
-    // performing histogram equalisation by mapping new gray levels
+    // performs hist equalization
     for (int i = 0; i < m; i++) {
         for(int j = 0; j < n; j++){
-            // mapping to new gray level values
+            // maps to new gray levels
             int temp, temp2;
             originalImage.getPixelVal(i, j, temp);
             equalizedImage.setPixelVal(i, j, equalizedHist[temp]);
         }
     }
-
-    //Output equalized image
+	// write equalized image
     writeImage(writePath, equalizedImage);
-
+	// confirmation
 	cout << "File written to: " << writePath <<endl;
+
+	// Output of original histogram
+	ofstream oldHistFile;
+  	oldHistFile.open ("originalHist.txt");
+	oldHistFile << "Gray Level:\tFrequency:"<<endl;
+	for(int i=0; i<n; i++) {
+		oldHistFile << i << ": \t\t" << originalHist[i]<<endl;
+	}
+  	oldHistFile.close();
+
+	// Output of equalized histogram
+	ofstream histFile;
+  	histFile.open ("equalizedHist.txt");
+	histFile << "Gray Level:\tFrequency:"<<endl;
+	for(int i=0; i<n; i++) {
+		histFile << i << ": \t\t" << equalizedHist[i]<<endl;
+	}
+  	histFile.close();
+	
+
+}
+
+// QUESTION 4: HISTOGRAM SPECIFICATION
+void Q4(){
+	int m, n, q; 
+	bool type;
+	char* readPath = "./Images/lenna.pgm";
+	char* specifiedHist = "";
+	char *writePath = "./Images/lenna_hist_spec.pgm"; 
+
+	readImageHeader(readPath, n, m, q, type);
+
+    ImageType originalImage(n, m, q);
+	originalImage.getImageInfo(n, m, q);
+    readImage(readPath, originalImage);
+
+    // declare two histograms
+    vector<int> originalHist(256, 0);
+    vector<int> specifiedHist(256, 0);
+
+    // calculate histogram
+    for(int i = 0; i < m; i++){
+        for(int j = 0; j < n; j++){
+            int temp;
+            originalImage.getPixelVal(i, j, temp);
+            originalHist[temp]++;
+        }
+    }
+
+    // get total # of pixels
+    int total = m * n;
+    int frequency = 0;
+
+    for (int i = 0; i < 256; i++) {
+        // calculate cumulative frequency 
+        frequency = frequency + originalHist[i];
+  
+		// calculate equalized gray level
+        specifiedHist[i] = round((((float)frequency) * 255) / total);
+    }
+
+    ImageType specifiedImage(n, m, q);
+
+    // performs hist equalization
+    for (int i = 0; i < m; i++) {
+        for(int j = 0; j < n; j++){
+            // maps to new gray levels
+            int temp, temp2;
+            originalImage.getPixelVal(i, j, temp);
+            specifiedImage.setPixelVal(i, j, specifiedHist[temp]);
+        }
+    }
 
 
 }
+
 
 int main(){
 	cout<<"CS 474 Programming Assignment 1: Team 8\n\n";
@@ -266,6 +339,9 @@ int main(){
 				break;
 			case 3:
 				Q3();
+				break;
+			case 4:
+				Q4();
 				break;
 		}
 	//}
