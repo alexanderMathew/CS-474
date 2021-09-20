@@ -15,7 +15,7 @@ class ImageType {
    void getPixelVal(int, int, int&);
    void assignPixelVal(int, int, int);
    void resizePixel(int, int, int);
-
+   void printPixelVal(int, int);
  private:
    int N, M, Q;
    int **pixelValue;

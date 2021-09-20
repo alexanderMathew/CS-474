@@ -1,5 +1,5 @@
 #include <stdlib.h>
-
+#include<iostream>
 #include "image.h"
 
 ImageType::ImageType()
@@ -86,4 +86,11 @@ void ImageType::assignPixelVal(int i, int j, int val)
 void ImageType::resizePixel(int i, int j, int val)
 {
  pixelValue[i][j]=val;
+ //for(int x = 0; x < )
+}
+
+void ImageType::printPixelVal(int i, int j)
+{
+ std::cout<<pixelValue[i][j] << std::endl;
+ //for(int x = 0; x < )
 }
