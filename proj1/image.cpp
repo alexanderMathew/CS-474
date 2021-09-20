@@ -77,3 +77,13 @@ void ImageType::getPixelVal(int i, int j, int& val)
  val = pixelValue[i][j];
 }
 
+
+void ImageType::assignPixelVal(int i, int j, int val)
+{
+ val = pixelValue[i][j];
+}
+
+void ImageType::resizePixel(int i, int j, int val)
+{
+ pixelValue[i][j]=val;
+}

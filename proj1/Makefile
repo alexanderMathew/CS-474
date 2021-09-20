@@ -1,7 +1,7 @@
 TARGET = proj1
 LIBS = -lm #Math Library, just a placeholder
 HEADERS = image.h
-SRCS = $(shell find . -name "*.cpp")
+SRCS = $(shell find . -name "*.cpp") 
 OBJECTS := $(patsubst %.cpp,%.o,$(SRCS))
 CXX = g++
 CXX_FLAGS = -Wall -std=c++11 #C++11 just for reference, not necessary
