@@ -2,6 +2,7 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <math.h>
 #include "image.h"
 using namespace std;
 
@@ -185,23 +186,90 @@ void Q2(){
 
 }
 
+// QUESTION 3: HISTOGRAM EQUALIZATION
+//////////////////////////////////////////////////////////////////////////////////////////CHANGE COMMENTS!!!!!!!!!!!!
+void Q3()
+{
+	int m, n, q; //n, m, and q for the input image
+	bool type;
+	char* readPath = "./Images/lenna.pgm";
+	char *writePath = "./Images/lenna_hist_eq.pgm"; 
+
+	readImageHeader(readPath, n, m, q, type);
+
+    ImageType originalImage(n, m, q);
+	originalImage.getImageInfo(n, m, q);
+    readImage(readPath, originalImage);
+
+    //Declaration for storing the two histograms
+    vector<int> originalHist(256, 0);
+    vector<int> equalizedHist(256, 0);
+
+    //Calculate Histogram
+    for(int i = 0; i < m; i++){
+        for(int j = 0; j < n; j++){
+            int temp;
+            originalImage.getPixelVal(i, j, temp);
+            originalHist[temp]++;
+        }
+    }
+
+    //Calculate total amount of pixels
+    int total = m * n;
+    int frequency = 0;
+
+    // calculating cumulative frequency and new gray levels
+    for (int i = 0; i < 256; i++) {
+        // calculating cumulative frequency
+        frequency = frequency + originalHist[i];
+  
+		// calculating equalized histogram's gray level
+        equalizedHist[i] = round((((float)frequency) * 255) / total);
+    }
+
+    ImageType equalizedImage(n, m, q);
+
+    // performing histogram equalisation by mapping new gray levels
+    for (int i = 0; i < m; i++) {
+        for(int j = 0; j < n; j++){
+            // mapping to new gray level values
+            int temp, temp2;
+            originalImage.getPixelVal(i, j, temp);
+            equalizedImage.setPixelVal(i, j, equalizedHist[temp]);
+        }
+    }
+
+    //Output equalized image
+    writeImage(writePath, equalizedImage);
+
+	cout << "File written to: " << writePath <<endl;
+
+
+}
+
 int main(){
 	cout<<"CS 474 Programming Assignment 1: Team 8\n\n";
 
 	int option;
 	cout<<"Please select one of the following options:\n";
-	cout<<"1. Image Sampling\n2. Image Quantization\n3. Histogram Equalization\n4. Histogram Specification\n\n";
+	cout<<"1. Image Sampling\n2. Image Quantization\n3. Histogram Equalization\n4. Histogram Specification\n5. Exit\n\n";
 	cout<<"Please enter an option: ";
 	cin>>option;
 
-	switch (option){
-		case 1:
-			Q1();
-			break;
-		case 2:
-			Q2();
-			break;
-	}
+	//while (option !=5){
+		switch (option){
+			case 1:
+				Q1();
+				break;
+			case 2:
+				Q2();
+				break;
+			case 3:
+				Q3();
+				break;
+		}
+	//}
 
 	return 0;
 }
+
