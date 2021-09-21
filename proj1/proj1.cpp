@@ -18,7 +18,7 @@ int readImageHeader(char fname[], int& N, int& M, int& Q, bool& type);
 
 
 // function implementations
-void subSampleImage(ImageType originalImage, ImageType& newImage, int factor){
+void subSampleImage(ImageType originalImage, ImageType& newImage, int factor, ImageType& sampledImage){
 	int orig_rows, orig_cols, orig_qlvl;
 	int sampled_rows = 0;
 	int sampled_cols = 0;
@@ -37,11 +37,14 @@ void subSampleImage(ImageType originalImage, ImageType& newImage, int factor){
 			//newImage.assignPixelVal(sampled_cols, sampled_rows, pixelVal); // assign pixel values
 
 			// RESIZE ATTEMPT
-			/*////////////////////////////////////////////////////////////////////////////////////////////////////////////
-			for(int x = 0; x < orig_cols; x++){
-				for(int y = 0; y < orig_rows; y++){
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			for(int x = 1; x < orig_cols; x++){
+				for(int y = 1; y < orig_rows; y++){
 					int temp;
-					if((x % factor) != 0 || (y % factor) != 0){
+					originalImage.getPixelVal(j/x, factor/x, temp);
+					sampledImage.setPixelVal(y, factor, temp);
+
+					/*if((x % factor) != 0 || (y % factor) != 0){
 						newImage.resizePixel(x, y, pixelVal); //newImage[x][y] = pixelVal;
 						//pixelVal[x][y] = temp;
 						
@@ -50,38 +53,78 @@ void subSampleImage(ImageType originalImage, ImageType& newImage, int factor){
 						newImage.assignPixelVal(x, y, pixelVal); //assign pixel values
 						//temp = pixelVal[x][y];
 
-					}
-						newImage.printPixelVal(x, y); //print pixel values
+					}*/
+						//newImage.printPixelVal(x, y); //print pixel values
 				}				
 			}
-			////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		sampled_rows++;
 
 		}
 	sampled_cols++;
 	}
+	writeImage("./Images/lenna_sampled.pgm", sampledImage);
 
 }
 
+//this function rescales values to [0-255]
+void rescale(int n, int m, ImageType OriginalImage){
+
+	int max=0;
+	int min = 0;
+
+	int temp;
+	for(int i = 0; i < n; i++){
+		for(int j = 0; j < m; j++){
+			OriginalImage.getPixelVal(i,j,temp);
+			if (temp > max){
+				max=temp;
+				OriginalImage.setPixelVal(i, j, max); //max=OriginalImage[i][j];
+			}
+			if (temp < min){
+				min=temp;
+				OriginalImage.setPixelVal(i, j, min); //min=OriginalImage[i][j];
+			}
+		}
+	}
+
+	// map to [0,255] equation
+	int x;
+	int y;
+	for(int i = 0; i < n; i++){
+		for(int j = 0; j < m; j++){
+			OriginalImage.getPixelVal(i,j,x);
+			y = 255 * (x-min)/(max-min); // The Equation
+			OriginalImage.setPixelVal(i,j,y);
+		}
+	}
+
+	writeImage("./Images/lenna_quantized.pgm", OriginalImage);
+
+
+}
 
 void quantizeImage(int qLevel, int n, int m, ImageType originalImage, ImageType newImage){
     int val;
+	val = 256 / qLevel;
+	int pixelVal;
     //qLevel = 256 / qLevel;
 	//newImage.setImageInfo(m, n, qLevel);// new
 
     for(int i = 0; i < n; i++){
         for(int j = 0; j < m; j++){
-            originalImage.getPixelVal(i, j, val);
+            originalImage.getPixelVal(i, j, pixelVal);
 			//originalImage.printPixelVal(i, j);
 			//cout << "pixelval: " << val << endl;
 			//val /= qLevel;
-            newImage.setPixelVal(i, j, val/qLevel);
+            newImage.setPixelVal(i, j, pixelVal/val);
 			//newImage.setImageInfo(m, n, qLevel);// new
 
 			//newImage.printPixelVal(i, j);
         }
     }
-	writeImage("./Images/lenna_quantized.pgm", newImage);
+
+	rescale(n, m, newImage);
     
 }
 
@@ -107,14 +150,15 @@ void Q1() {
 	int z = n;
 
 	ImageType ssImage(z, x, y); // the subsampled image
+	ImageType resizedImage(z, x, y); // new
 
 	readImage(readPath, ImageToSample); //read in the ImageToSample
 
 	// sample image
-	subSampleImage(ImageToSample, ssImage, ss_factor);
+	subSampleImage(ImageToSample, ssImage, ss_factor, resizedImage /*new*/);
 
 	// write image
-	writeImage(writePath, ssImage);
+	//writeImage(writePath, ssImage);
 
 	cout << "File written to: " << writePath <<endl;
 }
