@@ -1,7 +1,11 @@
+//CS 474 Project 1 
+//Team #8: Alexander Mathew & Tal Shahar Zemach
+
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <stdlib.h>
 #include <math.h>
 #include "image.h"
 using namespace std;
@@ -30,7 +34,7 @@ void subSampleImage(ImageType originalImage, ImageType& newImage, int factor){
 		for(int j = 0; j < orig_rows; j += factor){
 			originalImage.getPixelVal(i, j, val); // get pixel values from the original image
 			newImage.setPixelVal(sampled_cols, sampled_rows, val); // set pixel values
-			newImage.assignPixelVal(sampled_cols, sampled_rows, pixelVal); // assign pixel values
+			//newImage.assignPixelVal(sampled_cols, sampled_rows, pixelVal); // assign pixel values
 
 			// RESIZE ATTEMPT
 			/*////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -62,54 +66,25 @@ void subSampleImage(ImageType originalImage, ImageType& newImage, int factor){
 
 void quantizeImage(int qLevel, int n, int m, ImageType originalImage, ImageType newImage){
     int val;
-    qLevel = 256 / qLevel;
+    //qLevel = 256 / qLevel;
 	//newImage.setImageInfo(m, n, qLevel);// new
 
-	cout << "M: " << m << "N: "<< n << "q lvl: " << qLevel << endl;
     for(int i = 0; i < n; i++){
         for(int j = 0; j < m; j++){
             originalImage.getPixelVal(i, j, val);
 			//originalImage.printPixelVal(i, j);
-			val /= qLevel;
-            newImage.setPixelVal(i, j, val);
+			//cout << "pixelval: " << val << endl;
+			//val /= qLevel;
+            newImage.setPixelVal(i, j, val/qLevel);
 			//newImage.setImageInfo(m, n, qLevel);// new
 
 			//newImage.printPixelVal(i, j);
         }
     }
+	writeImage("./Images/lenna_quantized.pgm", newImage);
     
 }
 
-/*void rescale(int n, int m, int q, ImageType OriginalImage){
-	OriginalImage.getImageInfo(n, m, q);
-
-	int max = 0;
-	//OriginalImage.setPixelVal(0, 0, max); //initialization - point 0,0 is our original max
-	int min = 0;
-	//OriginalImage.setPixelVal(0, 0, min); //initialization - point 0,0 is our original min
-	
-	/////////////PRINT IMAGE////////////////////
-	for(int i = 0; i < n; i++){
-		for(int j = 0; j < m; j++){
-			//OriginalImage.printPixelVal(i,j);
-		}
-	}	
-	///////////////////////////////////////////
-
-	int temp;
-	for(int i = 0; i < n; i++){
-		for(int j = 0; j < m; j++){
-			OriginalImage.getPixelVal(i,j,temp);
-			if (temp > max){
-				//OriginalImage.setPixelVal(i, j, max); //max=OriginalImage[i][j];
-			}
-			if(temp < min){
-				//OriginalImage.setPixelVal(i, j, min); //min=OriginalImage[i][j];
-			}
-			cout<<"MAX: "<<max<<"\tMIN: "<<min<<endl;
-		}
-	}
-}*/
 
 // QUESTION 1: IMAGE SAMPLING
 void Q1() {
@@ -166,23 +141,9 @@ void Q2(){
     cout << "Enter quantization level: ";
     cin >> q_level;
 
-	ImageType resizedImage(x, y, q_level);
-	
-	/*for(int i = 0; i < z; i++){
-		for(int j = 0; j < x; j++){
-			resizedImage.printPixelVal(i, j);
-		}
-	}*/
-
+	ImageType resizedImage(x, y, q/q_level);
 	//PROBLEM WITHH FUNCTION
     quantizeImage(q_level, x, y, ImageToQuantize, resizedImage);
-	/*for(int i = 0; i < y; i++){
-		for(int j = 0; j < x; j++){
-			resizedImage.printPixelVal(i, j);
-		}
-	}*/
-
-    writeImage(writePath, resizedImage);
 
 	cout << "File written to: " << writePath <<endl;
 
@@ -267,15 +228,20 @@ void Q3()
 
 // QUESTION 4: HISTOGRAM SPECIFICATION
 void Q4(){
-	int m, n, q; 
+	/*int m, n, q; 
+	// variables for specified histogram
+	int x, y, z;
 	bool type;
-	char* readPath = "./Images/lenna.pgm";
-	char* specifiedHist = "";
+	char* readPath = "./Images/boat.pgm";
+	char* specHistPath = "./Images/sf.pgm";
 	char *writePath = "./Images/lenna_hist_spec.pgm"; 
 
 	readImageHeader(readPath, n, m, q, type);
+	readImageHeader(specHistPath, x, y, z, type);
 
     ImageType originalImage(n, m, q);
+	// ImageType object for specified hist
+	ImageType specHistImage(x, y, z);
 	originalImage.getImageInfo(n, m, q);
     readImage(readPath, originalImage);
 
@@ -292,6 +258,17 @@ void Q4(){
         }
     }
 
+
+	// calculate specified histogram
+	for(int i = 0; i < m; i++){
+        for(int j = 0; j < n; j++){
+            int temp;
+            specHistImage.getPixelVal(i, j, temp);
+            specifiedHist[temp]++;
+        }
+    }
+
+
     // get total # of pixels
     int total = m * n;
     int frequency = 0;
@@ -304,9 +281,19 @@ void Q4(){
         specifiedHist[i] = round((((float)frequency) * 255) / total);
     }
 
-    ImageType specifiedImage(n, m, q);
+    ImageType equalizedImage(n, m, q);
 
-    // performs hist equalization
+    // performs hist equalization on original image
+    for (int i = 0; i < m; i++) {
+        for(int j = 0; j < n; j++){
+            // maps to new gray levels
+            int temp, temp2;
+            originalImage.getPixelVal(i, j, temp);
+            equalizedImage.setPixelVal(i, j, specifiedHist[temp]);
+        }
+    }
+
+	// performs hist equalization on specified hist image
     for (int i = 0; i < m; i++) {
         for(int j = 0; j < n; j++){
             // maps to new gray levels
@@ -314,7 +301,7 @@ void Q4(){
             originalImage.getPixelVal(i, j, temp);
             specifiedImage.setPixelVal(i, j, specifiedHist[temp]);
         }
-    }
+    }*/
 
 
 }
